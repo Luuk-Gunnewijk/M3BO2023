@@ -4,36 +4,32 @@ using UnityEngine;
 
 public class PlayerHealth : MonoBehaviour
 {
-    [SerializeField] int health = 3;
+    public int health = 3;
 
     CapsuleCollider2D myCapsuleCollider2D;
+    LevelManager_script myLevelManager_Script;
+    PlayerAudio_Script myPlayerAudio_Script;
+    Animator myAnimator;
 
     public bool isAlive = true;
 
     void Start()
     {
+        myAnimator = GetComponent<Animator>();
+        myLevelManager_Script = FindObjectOfType<LevelManager_script>();
+        myPlayerAudio_Script = FindObjectOfType<PlayerAudio_Script>();
         myCapsuleCollider2D = GetComponent<CapsuleCollider2D>();
     }
 
     void Update()
     {
-        TestingDie();
         HealthReachesZero();
         //Debug.Log(health);
     }
 
-    void TestingDie()
-    {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            health = health - 1;
-            //Debug.Log(health);
-            //Debug.Log(isAlive);
-        }
-    }
-
     public void LoseHealth()
     {
+        myPlayerAudio_Script.Grunt1Sound();
         health = health - 1;
     }
 
@@ -42,6 +38,9 @@ public class PlayerHealth : MonoBehaviour
         if (health <= 0)
         {
             isAlive = false;
+            myAnimator.SetBool("IsDying", true);
+            myPlayerAudio_Script.Grunt2Sound();
+            myLevelManager_Script.LoadMainMenu();
         }
     }
 }

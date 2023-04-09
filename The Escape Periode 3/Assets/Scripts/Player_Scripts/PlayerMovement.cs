@@ -20,17 +20,21 @@ public class PlayerMovement : MonoBehaviour
     CapsuleCollider2D myCapsuleCollider2D;
     Rigidbody2D myRigidbody2D;
     PlayerHealth myPlayerHealthScript;
+    PlayerAudio_Script myPlayerAudioScript;
     Animator myAnimator;
     SpriteRenderer mySpriteRenderer;
 
     float isDamegedTime = 0.5f;
     float gravityScaleOnStart;
 
-    bool canDash = true;
+    public bool canDash = true;
+
+    float oldPos;
 
     void Awake()
     {
         myPlayerHealthScript = FindObjectOfType<PlayerHealth>();
+        myPlayerAudioScript = FindObjectOfType<PlayerAudio_Script>();
     }
 
     void Start()
@@ -49,6 +53,9 @@ public class PlayerMovement : MonoBehaviour
         Jumping();
         Dash();
         ClimbLadder();
+
+        //coroutine in update//
+        PositionSide();
     }
 
     void Movement()
@@ -83,6 +90,7 @@ public class PlayerMovement : MonoBehaviour
         {
             myAnimator.SetBool("Isjumping", true);
             myRigidbody2D.velocity += new Vector2(0, jumpHeight);
+            myPlayerAudioScript.JumpSound();
         }
         else
         {
@@ -90,29 +98,13 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void Dash()
-    {
-        if (myPlayerHealthScript.isAlive == false) { return; }
-        if (!canDash) { return; }
-        if (Input.GetKeyDown(KeyCode.Q))
-        {
-            myRigidbody2D.velocity += new Vector2(-dashSpeed, 0);
-            StartCoroutine(DashTime());
-        }
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            myRigidbody2D.velocity += new Vector2(dashSpeed, 0);
-            StartCoroutine(DashTime());
-        }
-    }
-
     void ClimbLadder()
     {
-        if (!myCapsuleCollider2D.IsTouchingLayers(LayerMask.GetMask("Climbing"))) 
+        if (!myCapsuleCollider2D.IsTouchingLayers(LayerMask.GetMask("Climbing")))
         {
             myRigidbody2D.gravityScale = gravityScaleOnStart;
             myAnimator.SetBool("IsClimbing", false);
-            return; 
+            return;
         }
 
         bool playerHasVerticalSpeed = Mathf.Abs(myRigidbody2D.velocity.y) > Mathf.Epsilon;
@@ -124,38 +116,60 @@ public class PlayerMovement : MonoBehaviour
             myRigidbody2D.velocity = climbVelocity;
             myRigidbody2D.gravityScale = 0f;
         }
-        
+
     }
-        
+    void Dash()
+    {
+        if (myPlayerHealthScript.isAlive == false) { return; }
+        if (!canDash) { return; }
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            myRigidbody2D.velocity += new Vector2(-dashSpeed, 0);
+            StartCoroutine(IsDashing());
+            StartCoroutine(DashTime());
+        }
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            myRigidbody2D.velocity += new Vector2(dashSpeed, 0);
+            StartCoroutine(IsDashing());
+            StartCoroutine(DashTime());
+        }
+    }
 
     IEnumerator DashTime()
     {
         canDash = false;
-        Debug.Log(canDash);
+        //Debug.Log(canDash);
         yield return new WaitForSeconds(DashMeter);
         canDash = true;
-        Debug.Log(canDash);
+        //Debug.Log(canDash);
+    }
+
+    IEnumerator IsDashing()
+    {
+        myAnimator.SetBool("IsDashing", true);
+        yield return new WaitForSeconds(0.5f);
+        myAnimator.SetBool("IsDashing", false);
     }
 
     public void TakingDamage()
     {
-        // maak variablen die de oude postien en de nieuwe postien
-        //
-        float oldPos;
-        float newPos;
-        oldPos = myRigidbody2D.position.x;
-        newPos = myRigidbody2D.position.x;
-        
-        if(newPos > oldPos)
-        {
-            Debug.Log("Works");
-        }
-        //
-        
-        
-        StartCoroutine(DamageTime());
-        myRigidbody2D.velocity = deathKick;
+        float newPos = transform.position.x;
+
         myPlayerHealthScript.LoseHealth();
+
+        if(myPlayerHealthScript.health >= 1)
+        {
+            StartCoroutine(DamageTime());
+            if (oldPos > newPos)
+            {
+                myRigidbody2D.velocity = -deathKick;
+            }
+            else if (oldPos < newPos)
+            {
+                myRigidbody2D.velocity = deathKick;
+            }
+        }
     }
 
     IEnumerator DamageTime()
@@ -163,5 +177,12 @@ public class PlayerMovement : MonoBehaviour
         myAnimator.SetBool("IsDamaged", true);
         yield return new WaitForSeconds(isDamegedTime);
         myAnimator.SetBool("IsDamaged", false);
+    }
+
+    IEnumerator PositionSide()
+    {
+        var pos = transform.position.x;
+        yield return new WaitForSeconds(.1f);
+        oldPos = pos;
     }
 }
