@@ -21,6 +21,7 @@ public class PlayerMovement : MonoBehaviour
     Rigidbody2D myRigidbody2D;
     PlayerHealth myPlayerHealthScript;
     PlayerAudio_Script myPlayerAudioScript;
+    LevelManager_script myLevelManager_Script;
     Animator myAnimator;
     SpriteRenderer mySpriteRenderer;
 
@@ -35,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
     {
         myPlayerHealthScript = FindObjectOfType<PlayerHealth>();
         myPlayerAudioScript = FindObjectOfType<PlayerAudio_Script>();
+        myLevelManager_Script = FindObjectOfType<LevelManager_script>();
     }
 
     void Start()
@@ -53,6 +55,7 @@ public class PlayerMovement : MonoBehaviour
         Jumping();
         Dash();
         ClimbLadder();
+        GotoMainMenu();
 
         //coroutine in update//
         PositionSide();
@@ -184,5 +187,13 @@ public class PlayerMovement : MonoBehaviour
         var pos = transform.position.x;
         yield return new WaitForSeconds(.1f);
         oldPos = pos;
+    }
+
+    void GotoMainMenu()
+    {
+        if(Input.GetKeyDown(KeyCode.Escape))
+        {
+            myLevelManager_Script.LoadMainMenuWithoutDelay();
+        }
     }
 }

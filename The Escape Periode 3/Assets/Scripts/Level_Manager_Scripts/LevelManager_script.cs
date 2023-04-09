@@ -43,4 +43,9 @@ public class LevelManager_script : MonoBehaviour
         yield return new WaitForSeconds(LevelDelay);
         isLoadLevelDelay = true;
     }
+
+    public void LoadMainMenuWithoutDelay()
+    {
+        SceneManager.LoadScene("Main_Menu");
+    }
 }
